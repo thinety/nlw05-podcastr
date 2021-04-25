@@ -1,9 +1,11 @@
 import type { GetStaticPropsContext, GetStaticPropsResult, GetStaticPathsResult } from 'next';
+import Head from 'next/head';
 import Image from 'next/image';
 import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { ptBR }  from 'date-fns/locale'
 
+import { usePlayer } from '../../../contexts/PlayerContext';
 import { api } from '../../../services/api';
 import { convertDurationToTimeString } from '../../../utils/time';
 
@@ -18,6 +20,8 @@ type Episode = {
   description: string,
   publishedAt: string,
   durationAsString: string,
+  duration: number,
+  url: string,
 };
 
 interface EpisodeProps {
@@ -25,8 +29,14 @@ interface EpisodeProps {
 }
 
 function Episode({ episode }: EpisodeProps) {
+  const { play } = usePlayer();
+
   return (
     <main className={styles['episode']}>
+      <Head>
+        <title>{episode.title} | Podcastr</title>
+      </Head>
+
       <section className={styles['thumbnail-container']}>
         <Link href='/'>
           <button>
@@ -40,7 +50,7 @@ function Episode({ episode }: EpisodeProps) {
           height={160}
           objectFit='cover'
         />
-        <button>
+        <button onClick={() => { play(episode); }}>
           <img src='/play.svg' alt='Tocar episódio' />
         </button>
       </section>
@@ -75,7 +85,7 @@ async function getStaticProps(context: GetStaticPropsContext): Promise<GetStatic
     members,
     description,
     published_at,
-    file: { duration },
+    file: { duration, url },
   } = response.data;
 
   const episode = {
@@ -86,6 +96,8 @@ async function getStaticProps(context: GetStaticPropsContext): Promise<GetStatic
     description,
     publishedAt: format(parseISO(published_at), 'd MMM yy', { locale: ptBR }),
     durationAsString: convertDurationToTimeString(Number(duration)),
+    duration: Number(duration),
+    url,
   };
 
   return {
