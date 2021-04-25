@@ -100,6 +100,11 @@ async function getStaticPaths(): Promise<GetStaticPathsResult> {
   const response = await api({
     method: 'get',
     url: '/episodes',
+    params: {
+      _limit: 2,
+      _sort: 'published_at',
+      _order: 'desc',
+    },
   });
 
   const paths = response.data.map((episode: any) => (

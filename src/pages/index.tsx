@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { format, parseISO } from 'date-fns';
 import { ptBR }  from 'date-fns/locale'
 
+import { usePlayer } from '../contexts/PlayerContext';
 import { api } from '../services/api';
 import { convertDurationToTimeString } from '../utils/time';
 
@@ -17,6 +18,8 @@ type Episode = {
   members: string,
   publishedAt: string,
   durationAsString: string,
+  duration: number,
+  url: string,
 };
 
 interface HomeProps {
@@ -25,6 +28,8 @@ interface HomeProps {
 }
 
 function Home({ latestEpisodes, allEpisodes }: HomeProps) {
+  const { play } = usePlayer();
+
   return (
     <main className={styles['homepage']}>
       <section className={styles['latest-episodes']}>
@@ -49,7 +54,9 @@ function Home({ latestEpisodes, allEpisodes }: HomeProps) {
                 <span>{episode.durationAsString}</span>
               </div>
 
-              <button className={styles['play-button']}>
+              <button className={styles['play-button']} onClick={() => {
+                play(episode);
+              }}>
                 <img src='/play-green.svg' alt='Tocar episódio' />
               </button>
             </li>
@@ -121,7 +128,7 @@ async function getStaticProps(_context: GetStaticPropsContext): Promise<GetStati
       thumbnail,
       members,
       published_at,
-      file: { duration },
+      file: { url, duration },
     } = episode;
 
     return {
@@ -131,6 +138,8 @@ async function getStaticProps(_context: GetStaticPropsContext): Promise<GetStati
       members,
       publishedAt: format(parseISO(published_at), 'd MMM yy', { locale: ptBR }),
       durationAsString: convertDurationToTimeString(Number(duration)),
+      duration: Number(duration),
+      url,
     };
   });
 
